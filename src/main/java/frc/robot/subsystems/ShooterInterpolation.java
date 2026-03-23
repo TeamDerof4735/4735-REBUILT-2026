@@ -1,6 +1,6 @@
-package frc.robot;
+package frc.robot.subsystems;
 
-public class ShooterLookup {
+public class ShooterInterpolation {
 
     public static class ShotPoint {
         public double distance;
@@ -12,7 +12,7 @@ public class ShooterLookup {
         }
     }
 
-    // ajustar
+    // Insert Distances
     private static final ShotPoint[] table = {
         new ShotPoint(1.5, 2000),
         new ShotPoint(2.0, 1980),
@@ -23,14 +23,13 @@ public class ShooterLookup {
     };
 
 
-    public static double getRPM(double d) {
-
+    public double calculateRPM(double limelightDistance) {
         // si esta out of range
-        if (d <= table[0].distance) {
+        if (limelightDistance <= table[0].distance) {
             return table[0].rpm;
         }
 
-        if (d >= table[table.length - 1].distance) {
+        if (limelightDistance >= table[table.length - 1].distance) {
             return table[table.length - 1].rpm;
         }
 
@@ -38,10 +37,10 @@ public class ShooterLookup {
             ShotPoint p1 = table[i];
             ShotPoint p2 = table[i + 1];
 
-            if (d >= p1.distance && d <= p2.distance) {
+            if (limelightDistance >= p1.distance && limelightDistance <= p2.distance) {
 
                 // Interpolacion
-                double t = (d - p1.distance) / (p2.distance - p1.distance);
+                double t = (limelightDistance - p1.distance) / (p2.distance - p1.distance);
 
                 return p1.rpm + t * (p2.rpm - p1.rpm);
             }

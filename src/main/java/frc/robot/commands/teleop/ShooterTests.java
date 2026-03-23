@@ -1,25 +1,21 @@
-package frc.robot.commands;
+package frc.robot.commands.teleop;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.LimelightHelpers;
-import frc.robot.subsystems.IntakeandIndex;
-//import frc.robot.subsystems.shooter;
-//import frc.robot.subsystems.shooter;
-import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.ConveyorSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
-public class RunShoot extends Command{
+public class ShooterTests extends Command{
+  ShooterSubsystem shooter;
+  ConveyorSubsystem conveyor;
+  Timer Timer = new Timer();
 
-    Shooter shooter;
-    IntakeandIndex intakeandIndex;
-    Timer Timer = new Timer();
-
-    public RunShoot(Shooter shooter, IntakeandIndex intakeandIndex) {
+  public ShooterTests(ShooterSubsystem shooter, ConveyorSubsystem conveyor) {
     this.shooter = shooter;
-    this.intakeandIndex = intakeandIndex;
+    this.conveyor = conveyor;
+
     addRequirements(shooter);
-    addRequirements(intakeandIndex);
+    addRequirements(conveyor);
   }
 
   
@@ -31,17 +27,23 @@ public class RunShoot extends Command{
   
   @Override
   public void execute() {
-    shooter.shootVel(1995);
+    shooter.shooterSpeed(1995);
     
-    if(shooter.left_rpm() >= 1994){
+    if(shooter.getShooterRPM() >= 1994){
       Timer.start();
       if (Timer.get() >= 0.4) {
-        shooter.index(-0.7);
+        shooter.shooterSpeed(1995);
+        shooter.indexMove(-0.7);
+        conveyor.conveyorMove(0.7);
       } else {
-        shooter.conveyorPOT(0);
+        shooter.shooterSpeed(1995);
+        shooter.indexMove(0);
+        conveyor.conveyorMove(0);
       }
     } else {
-      shooter.conveyorPOT(0);
+      shooter.shooterSpeed(1995);
+      shooter.indexMove(0);
+      conveyor.conveyorMove(0);
       Timer.reset();
     }
   }
@@ -49,9 +51,9 @@ public class RunShoot extends Command{
   
   @Override
   public void end(boolean interrupted) {
-    shooter.shooterRun(0);
-    shooter.conveyorPOT(0);
-    intakeandIndex.runIND(0);
+    shooter.shooterSpeed(0);
+    shooter.indexMove(0);
+    conveyor.conveyorMove(0);
   }
 
   
@@ -59,5 +61,4 @@ public class RunShoot extends Command{
   public boolean isFinished() {
     return false;
   }
-    
 }

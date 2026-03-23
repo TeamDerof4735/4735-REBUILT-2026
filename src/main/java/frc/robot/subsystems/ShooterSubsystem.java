@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.RPM;
-
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -18,10 +16,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.shooterConstant;
-import frc.robot.LimelightHelpers.IMUData;
-import frc.robot.LimelightHelpers.PoseEstimate;
 
-public class Shooter extends SubsystemBase {
+public class ShooterSubsystem extends SubsystemBase {
 
   SparkMax shooterMotor = new SparkMax(shooterConstant.shooterMotor_ID, MotorType.kBrushless);
   SparkMax indexMotor = new SparkMax(shooterConstant.indexMotor_ID, MotorType.kBrushless);
@@ -32,7 +28,7 @@ public class Shooter extends SubsystemBase {
   private RelativeEncoder shooterEncoder;
 
   
-  public Shooter() {
+  public ShooterSubsystem() {
     shooterEncoder = shooterMotor.getEncoder();
 
     shooterMotorConfig
@@ -95,11 +91,7 @@ public class Shooter extends SubsystemBase {
     return shooterEncoder.getVelocity();
   }
 
-  public void shooterMove(double potencia) {
-    shooterMotor.set(potencia);
-  }
-
-  public void shootVel(double speedMotor) {
+  public void shooterSpeed(double speedMotor) {
     shooterCloose.setSetpoint(speedMotor, ControlType.kVelocity);
   }
 

@@ -16,8 +16,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.wristConstants;
 
-public class WristSubystem extends SubsystemBase {
-/* 
+public class WristSubystem extends SubsystemBase { 
   SparkMax left_WristMotor = new SparkMax(wristConstants.leftMotorWrist_ID, MotorType.kBrushless);
   SparkMax right_WristMotor = new SparkMax(wristConstants.rightMotorWrist_ID, MotorType.kBrushless);
   SparkMaxConfig leftmotorConfig = new SparkMaxConfig();
@@ -60,7 +59,7 @@ public class WristSubystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Absolute Encoder Angle", absoluteEncoder.get());
+    SmartDashboard.putNumber(" Wrist Absolute Encoder Angle", absoluteEncoder.get());
 
     left_WristMotor.set(wristPID.calculate(absoluteEncoder.get(), wristPID.getSetpoint()));
     right_WristMotor.set(0.775 * wristPID.calculate(absoluteEncoder.get(), wristPID.getSetpoint()));
@@ -74,6 +73,4 @@ public class WristSubystem extends SubsystemBase {
     left_WristMotor.set(power);
     right_WristMotor.set(power);
   }
-
- */
 }

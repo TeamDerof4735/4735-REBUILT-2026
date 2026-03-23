@@ -10,12 +10,12 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.conveyorConstant;
 
-public class Conveyor extends SubsystemBase {
+public class ConveyorSubsystem extends SubsystemBase {
 
   SparkMax conveyorMotor = new SparkMax(conveyorConstant.conveyorMotor_ID, MotorType.kBrushless);
   SparkMaxConfig conveyorMotorConfig = new SparkMaxConfig();
   
-  public Conveyor() {
+  public ConveyorSubsystem() {
     conveyorMotorConfig
       .inverted(false)
       .idleMode(IdleMode.kBrake)
@@ -27,11 +27,7 @@ public class Conveyor extends SubsystemBase {
   @Override
   public void periodic() {}
 
-  public void conveyorRun() {
-    conveyorMotor.set(0.7);
-  }
-
-  public void conveyorStop() {
-    conveyorMotor.set(0);
+  public void conveyorMove(double potencia) {
+    conveyorMotor.set(potencia);
   }
 }
