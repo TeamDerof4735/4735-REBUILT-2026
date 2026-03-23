@@ -8,7 +8,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.indexerConstant;
 import frc.robot.Constants.intakeconstants;
 
 public class Intake extends SubsystemBase {

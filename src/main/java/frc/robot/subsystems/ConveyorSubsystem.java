@@ -8,12 +8,11 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.indexerConstant;
-import frc.robot.Constants.intakeconstants;
+import frc.robot.Constants.conveyorConstant;
 
 public class Conveyor extends SubsystemBase {
 
-  SparkMax conveyorMotor = new SparkMax(indexerConstant.conveyorMotor_ID, MotorType.kBrushless);
+  SparkMax conveyorMotor = new SparkMax(conveyorConstant.conveyorMotor_ID, MotorType.kBrushless);
   SparkMaxConfig conveyorMotorConfig = new SparkMaxConfig();
   
   public Conveyor() {

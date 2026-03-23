@@ -25,7 +25,7 @@ import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision;
 //import frc.robot.subsystems.shooter;
 import frc.robot.subsystems.WristSubystem;
-import frc.robot.subsystems.shooter;
+import frc.robot.subsystems.Shooter;
 
 import java.io.File;
 import swervelib.SwerveInputStream;
@@ -40,7 +40,7 @@ public class RobotContainer
 
   private final WristSubystem wristSubystem = new WristSubystem();
 
-  private final shooter shooter = new shooter();
+  private final Shooter shooter = new Shooter();
 
   private final ShooterLookup shooterLookup = new ShooterLookup();
   

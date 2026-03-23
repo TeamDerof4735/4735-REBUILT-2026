@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -19,67 +21,58 @@ import frc.robot.Constants.shooterConstant;
 import frc.robot.LimelightHelpers.IMUData;
 import frc.robot.LimelightHelpers.PoseEstimate;
 
-public class shooter extends SubsystemBase {
+public class Shooter extends SubsystemBase {
 
-  SparkMax shooterMotor = new SparkMax(shooterConstant.shooter, MotorType.kBrushless);
-  SparkMax conveyorrMotor = new SparkMax(shooterConstant.conveyor, MotorType.kBrushless);
-  SparkMaxConfig shootermotorConfig = new SparkMaxConfig();
-  SparkMaxConfig conveyormotorConfig = new SparkMaxConfig();
+  SparkMax shooterMotor = new SparkMax(shooterConstant.shooterMotor_ID, MotorType.kBrushless);
+  SparkMax indexMotor = new SparkMax(shooterConstant.indexMotor_ID, MotorType.kBrushless);
+  SparkMaxConfig shooterMotorConfig = new SparkMaxConfig();
+  SparkMaxConfig indexMotorConfig = new SparkMaxConfig();
   SparkClosedLoopController shooterCloose = shooterMotor.getClosedLoopController();
 
-  private RelativeEncoder left_encoder;
+  private RelativeEncoder shooterEncoder;
 
   
-  public shooter() {
+  public Shooter() {
+    shooterEncoder = shooterMotor.getEncoder();
 
+    shooterMotorConfig
+      .inverted(false)
+      .idleMode(IdleMode.kCoast)
+      .smartCurrentLimit(90)
+      .encoder.velocityConversionFactor(1);
 
-    left_encoder = shooterMotor.getEncoder();
+    shooterMotorConfig.closedLoop
+      .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+      .pid(
+      Constants.shooterConstant.left_kp,
+      Constants.shooterConstant.left_ki,
+      Constants.shooterConstant.left_kd)
+      .outputRange(-1.0, 1.0);
 
-    shootermotorConfig
-    .inverted(false)
-    .idleMode(IdleMode.kCoast)
-    .smartCurrentLimit(90)
-    .encoder.velocityConversionFactor(1);
+    shooterMotorConfig.closedLoop.feedForward
+      .kV(Constants.shooterConstant.left_F);
 
-    shootermotorConfig.closedLoop
-    .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-    .pid(
-    Constants.shooterConstant.left_kp,
-    Constants.shooterConstant.left_ki,
-    Constants.shooterConstant.left_kd)
-    .outputRange(-1.0, 1.0);
+    shooterMotorConfig.encoder
+      .uvwMeasurementPeriod(8);
 
-    shootermotorConfig.closedLoop.feedForward
-    .kV(Constants.shooterConstant.left_F);
-
-    shootermotorConfig.encoder
-    .uvwMeasurementPeriod(8);
-
-
-    conveyormotorConfig
+    indexMotorConfig
       .inverted(false)
       .idleMode(IdleMode.kBrake)
       .smartCurrentLimit(45);
 
-
-    shooterMotor.configure(shootermotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-    conveyorrMotor.configure(conveyormotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    shooterMotor.configure(shooterMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    indexMotor.configure(indexMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     
   }
 
   @Override
   public void periodic() {
-
-
-
-    SmartDashboard.putNumber("left rpm", left_rpm());
+    SmartDashboard.putNumber("Shooter RPM", getShooterRPM());
 
     // Obtener pose del AprilTag en espacio de cámara
     double[] pose = LimelightHelpers.getTargetPose_CameraSpace("limelight-derof");
 
     if (pose != null && pose.length >= 3 && LimelightHelpers.getTV("limelight-derof")) {
-
-
       double x = pose[0]; // izquierda/derecha (metros)
       double y = pose[1]; // arriba/abajo (metros)
       double z = pose[2]; // frente (metros)
@@ -96,27 +89,26 @@ public class shooter extends SubsystemBase {
     } else {
       SmartDashboard.putNumber("Distancia AprilTag (m)", 0);
     }
-
-
-
   }
 
-  public void shooterRun (double potencia) {
+  public double getShooterRPM () {
+    return shooterEncoder.getVelocity();
+  }
+
+  public void shooterMove(double potencia) {
     shooterMotor.set(potencia);
   }
 
-  public void shootVel (double speedMotor) {
+  public void shootVel(double speedMotor) {
     shooterCloose.setSetpoint(speedMotor, ControlType.kVelocity);
   }
 
-  public void conveyorPOT (double power) {
-    conveyorrMotor.set(power);
+  public void indexMove(double power) {
+    indexMotor.set(power);
   }
 
-  public double left_rpm () {
-    return left_encoder.getVelocity();
-  }
-
+  
+  // Interpolation Not Good
   public double calculateShoot(double distancia) {
 
 

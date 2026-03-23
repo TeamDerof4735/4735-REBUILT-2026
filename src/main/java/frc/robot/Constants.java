@@ -80,8 +80,8 @@ public static final double POSE_VALIDATION_TIME = 0.3; // segundos
 
   public static final class shooterConstant
    {
-    public static int shooter = 10; 
-    public static int conveyor = 11;
+    public static int shooterMotor_ID = 10; 
+    public static int indexMotor_ID = 11;
 
     public static double left_kp = 0.001;       //0.000095
     public static double left_ki = 0;              //0
@@ -90,9 +90,9 @@ public static final double POSE_VALIDATION_TIME = 0.3; // segundos
     
   }
 
-  public static final class indexerConstant
+  public static final class conveyorConstant
   {
-    public static int indexerMotor_ID = 13; 
+    public static int conveyorMotor_ID = 13; 
     
   }
 

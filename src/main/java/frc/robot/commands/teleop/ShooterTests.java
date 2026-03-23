@@ -7,15 +7,15 @@ import frc.robot.LimelightHelpers;
 import frc.robot.subsystems.IntakeandIndex;
 //import frc.robot.subsystems.shooter;
 //import frc.robot.subsystems.shooter;
-import frc.robot.subsystems.shooter;
+import frc.robot.subsystems.Shooter;
 
 public class RunShoot extends Command{
 
-    shooter shooter;
+    Shooter shooter;
     IntakeandIndex intakeandIndex;
     Timer Timer = new Timer();
 
-    public RunShoot(shooter shooter, IntakeandIndex intakeandIndex) {
+    public RunShoot(Shooter shooter, IntakeandIndex intakeandIndex) {
     this.shooter = shooter;
     this.intakeandIndex = intakeandIndex;
     addRequirements(shooter);
@@ -36,7 +36,7 @@ public class RunShoot extends Command{
     if(shooter.left_rpm() >= 1994){
       Timer.start();
       if (Timer.get() >= 0.4) {
-        shooter.conveyorPOT(-0.7);
+        shooter.index(-0.7);
       } else {
         shooter.conveyorPOT(0);
       }
