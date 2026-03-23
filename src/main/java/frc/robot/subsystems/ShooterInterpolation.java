@@ -1,6 +1,10 @@
 package frc.robot.subsystems;
 
-public class ShooterInterpolation {
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.LimelightHelpers;
+
+public class ShooterInterpolation extends SubsystemBase{
 
     public static class ShotPoint {
         public double distance;
@@ -12,6 +16,31 @@ public class ShooterInterpolation {
         }
     }
 
+    @Override
+    public void periodic() {
+        // Obtener pose del AprilTag en espacio de cámara
+        double[] pose = LimelightHelpers.getTargetPose_CameraSpace("limelight-derof");
+
+        if (pose != null && pose.length >= 3 && LimelightHelpers.getTV("limelight-derof")) {
+        double x = pose[0]; // izquierda/derecha (metros)
+        double y = pose[1]; // arriba/abajo (metros)
+        double z = pose[2]; // frente (metros)
+
+        // Distancia directa 3D
+        double distanceMeters = z;
+
+        SmartDashboard.putNumber("AprilTag X", x);
+        SmartDashboard.putNumber("AprilTag Y", y);
+        SmartDashboard.putNumber("AprilTag Z", z);
+        SmartDashboard.putNumber("Distancia AprilTag (M)", distanceMeters);
+        SmartDashboard.putNumber("RPM requerida", calculateRPM(z));
+        } else {
+        SmartDashboard.putNumber("Distancia AprilTag (M)", 0);
+        }
+    }
+
+
+    
     // Insert Distances
     private static final ShotPoint[] table = {
         new ShotPoint(1.5, 2000),
@@ -48,3 +77,4 @@ public class ShooterInterpolation {
         return 0;
     }
 }
+

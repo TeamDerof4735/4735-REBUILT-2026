@@ -13,14 +13,15 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.teleop.ConveyorCommand;
-import frc.robot.commands.teleop.IntakeFeedingCommand;
+import frc.robot.commands.teleop.IntakeCommand;
+import frc.robot.commands.teleop.WristFeedingCommand;
 import frc.robot.commands.teleop.ShooterCommand;
 //import frc.robot.commands.teleop.ShooterTests;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.WristSubystem;
 import frc.robot.subsystems.ConveyorSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterInterpolation;
 import frc.robot.subsystems.ShooterSubsystem;
 
@@ -37,13 +38,14 @@ public class RobotContainer
   private final WristSubystem wristSubystem = new WristSubystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   private final ConveyorSubsystem conveyorSubsystem = new ConveyorSubsystem();
+  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
 
   // Virtual Subsystems
   private final ShooterInterpolation shooterInterpolation = new ShooterInterpolation();
   private final Vision vision = new Vision(drivebase);
 
   // Commands
-  private IntakeFeedingCommand intakeFeedingCommand = new IntakeFeedingCommand(wristSubystem);
+  private WristFeedingCommand intakeFeedingCommand = new WristFeedingCommand(wristSubystem);
   private SendableChooser<Command> auto = new SendableChooser<>();
 
   //Controls :)                                                                                    
@@ -157,10 +159,11 @@ public class RobotContainer
     // ----------------- Control Subsysem -----------------     
     subsystemController.rightBumper().whileTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
       wristSubystem.goToPostionVoltage(Constants.wristConstants.afuera),
-      new ConveyorCommand(conveyorSubsystem)    
+      new IntakeCommand(intakeSubsystem)    
     ));
-    subsystemController.rightBumper().whileFalse(new SequentialCommandGroup(
-      wristSubystem.goToPostionVoltage(Constants.wristConstants.guardado)
+
+    subsystemController.y().onTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
+      wristSubystem.goToPostionVoltage(Constants.wristConstants.guardado)   
     ));
     
     //subsystemController.a().whileTrue( new ShooterTests(shooterSubsystem, conveyorSubsystem)); //Shooter Testing

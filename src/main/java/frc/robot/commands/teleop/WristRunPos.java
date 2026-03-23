@@ -29,7 +29,7 @@ public class WristRunPos extends Command {
   
   @Override
   public void execute() {
-    wristSubystem.wristRun(wristPID.calculate(wristSubystem.encoderPos(), setPoint));
+    wristSubystem.wristRun(wristPID.calculate(wristSubystem.getEnoderPosition(), setPoint));
   }
 
   @Override

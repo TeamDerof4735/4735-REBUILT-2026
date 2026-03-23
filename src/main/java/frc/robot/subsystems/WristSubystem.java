@@ -65,7 +65,7 @@ public class WristSubystem extends SubsystemBase {
     right_WristMotor.set(0.775 * wristPID.calculate(absoluteEncoder.get(), wristPID.getSetpoint()));
   }
 
-  public double encoderPos(){
+  public double getEnoderPosition(){
     return absoluteEncoder.get();
   }
 

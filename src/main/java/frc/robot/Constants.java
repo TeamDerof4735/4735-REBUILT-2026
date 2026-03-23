@@ -59,14 +59,13 @@ public static final double POSE_VALIDATION_TIME = 0.3; // segundos
     public static int rightMotorWrist_ID = 15;
     public static int encoder_ID = 0;
 
-    public static double guardado = 0.57;
-    public static double dejar = 0.125;
-    public static double afuera = 0.29;
+    public static double guardado = 0.58;
+    public static double afuera = 0.295;
 
 
-    public static double kP = 1;
+    public static double kP = 3.15;
     public static double kI = 0;
-    public static double kD = 0.3;
+    public static double kD = 0.35;
 
     
   }
@@ -76,10 +75,10 @@ public static final double POSE_VALIDATION_TIME = 0.3; // segundos
     public static int shooterMotor_ID = 10; 
     public static int indexMotor_ID = 11;
 
-    public static double left_kp = 0.001;       //0.000095
+    public static double left_kp = 0.0095;       //0.000095
     public static double left_ki = 0;              //0
     public static double left_kd = 0.0000001;           //1.45
-    public static double left_F = 0.00020;         //0.00021
+    public static double left_F = 0.00023;         //0.00021
     
   }
 

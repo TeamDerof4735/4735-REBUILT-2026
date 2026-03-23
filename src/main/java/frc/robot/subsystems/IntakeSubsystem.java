@@ -17,9 +17,9 @@ public class IntakeSubsystem extends SubsystemBase {
   
   public IntakeSubsystem() {
     intakeMotorConfig
-      .inverted(false)
+      .inverted(true)
       .idleMode(IdleMode.kBrake)
-      .smartCurrentLimit(30);
+      .smartCurrentLimit(55);
 
     intakeMotor.configure(intakeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }
@@ -27,7 +27,7 @@ public class IntakeSubsystem extends SubsystemBase {
   @Override
   public void periodic() {}
 
-  public void intakeRun(double power) {
+  public void intakeMove(double power) {
     intakeMotor.set(power);
   }
 

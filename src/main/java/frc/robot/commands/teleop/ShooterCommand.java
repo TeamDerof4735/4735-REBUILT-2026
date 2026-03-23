@@ -12,24 +12,25 @@ public class ShooterCommand extends Command {
   private final ShooterSubsystem shooter;
   private final ConveyorSubsystem conveyor;
   private final ShooterInterpolation shooterInterpolation;
-  private final IntakeFeedingCommand intakeCommand;
+  private final WristFeedingCommand wristCommand;
 
   private double distanceMeters;
   private double targetRPM;
 
   private final Timer timer = new Timer();
-  private boolean intakeStarted = false;
+
+  private boolean wristActivated = false;
 
   public ShooterCommand(
       ShooterSubsystem shooter,
       ConveyorSubsystem conveyor,
       ShooterInterpolation shooterInterpolation,
-      IntakeFeedingCommand intakeCommand) {
+      WristFeedingCommand wristCommand) {
 
     this.shooter = shooter;
     this.conveyor = conveyor;
     this.shooterInterpolation = shooterInterpolation;
-    this.intakeCommand = intakeCommand;
+    this.wristCommand = wristCommand;
 
     addRequirements(shooter, conveyor);
   }
@@ -38,41 +39,40 @@ public class ShooterCommand extends Command {
   public void initialize() {
     timer.reset();
     timer.stop();
-    intakeStarted = false;
+    wristActivated = false;
   }
 
   @Override
   public void execute() {
 
-    // Distancia con Limelight
+    // Limelight
     double[] pose = LimelightHelpers.getTargetPose_CameraSpace("limelight-derof");
 
     if (pose != null && pose.length >= 3 && LimelightHelpers.getTV("limelight-derof")) {
       distanceMeters = pose[2];
     } else {
-      distanceMeters = 0;
+      distanceMeters = 2.5;
     }
 
+    // RPM
     targetRPM = shooterInterpolation.calculateRPM(distanceMeters);
-
     shooter.shooterSpeed(targetRPM);
 
-    if (shooter.getShooterRPM() >= (targetRPM - 20)) { 
+    if (!wristActivated && shooter.getShooterRPM() >= (targetRPM - 50)) {
+      wristActivated = true;
+
+      wristCommand.schedule();
+    }
+
+    if (shooter.getShooterRPM() >= (targetRPM - 50)) {
 
       if (!timer.isRunning()) {
         timer.restart();
       }
 
       if (timer.get() >= 0.4) {
-
         shooter.indexMove(-0.7);
         conveyor.conveyorMove(0.7);
-
-        if (!intakeStarted) {
-          intakeCommand.schedule();
-          intakeStarted = true;
-        }
-
       } else {
         shooter.indexMove(0);
         conveyor.conveyorMove(0);
@@ -81,9 +81,9 @@ public class ShooterCommand extends Command {
     } else {
       shooter.indexMove(0);
       conveyor.conveyorMove(0);
+
       timer.stop();
       timer.reset();
-      intakeStarted = false;
     }
   }
 
@@ -93,8 +93,8 @@ public class ShooterCommand extends Command {
     shooter.indexMove(0);
     conveyor.conveyorMove(0);
 
-    if (intakeCommand.isScheduled()) {
-      intakeCommand.cancel();
+    if (wristCommand.isScheduled()) {
+      wristCommand.cancel();
     }
   }
 

@@ -25,6 +25,8 @@ public class ShooterSubsystem extends SubsystemBase {
   SparkMaxConfig indexMotorConfig = new SparkMaxConfig();
   SparkClosedLoopController shooterCloose = shooterMotor.getClosedLoopController();
 
+  ShooterInterpolation shooterInterpolation;
+
   private RelativeEncoder shooterEncoder;
 
   
@@ -79,11 +81,10 @@ public class ShooterSubsystem extends SubsystemBase {
       SmartDashboard.putNumber("AprilTag X", x);
       SmartDashboard.putNumber("AprilTag Y", y);
       SmartDashboard.putNumber("AprilTag Z", z);
-      SmartDashboard.putNumber("Distancia AprilTag (m)", distanceMeters);
-      SmartDashboard.putNumber("rpm requerida", calculateShoot(z));
+      SmartDashboard.putNumber("Distancia AprilTag (M)", distanceMeters);
 
     } else {
-      SmartDashboard.putNumber("Distancia AprilTag (m)", 0);
+      SmartDashboard.putNumber("Distancia AprilTag (M)", 0);
     }
   }
 

@@ -17,7 +17,7 @@ public class ConveyorCommand extends Command {
   
   @Override
   public void execute() {
-    conveyor.conveyorMove(0.3);
+    conveyor.conveyorMove(1);
   }
 
   
