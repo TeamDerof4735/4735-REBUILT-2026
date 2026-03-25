@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
+import java.io.File;
+
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.LimelightHelpers;
 
 public class ShooterInterpolation extends SubsystemBase{
 
+ 
     public static class ShotPoint {
         public double distance;
         public double rpm;
@@ -18,37 +21,17 @@ public class ShooterInterpolation extends SubsystemBase{
 
     @Override
     public void periodic() {
-        // Obtener pose del AprilTag en espacio de cámara
-        double[] pose = LimelightHelpers.getTargetPose_CameraSpace("limelight-derof");
 
-        if (pose != null && pose.length >= 3 && LimelightHelpers.getTV("limelight-derof")) {
-        double x = pose[0]; // izquierda/derecha (metros)
-        double y = pose[1]; // arriba/abajo (metros)
-        double z = pose[2]; // frente (metros)
-
-        // Distancia directa 3D
-        double distanceMeters = z;
-
-        SmartDashboard.putNumber("AprilTag X", x);
-        SmartDashboard.putNumber("AprilTag Y", y);
-        SmartDashboard.putNumber("AprilTag Z", z);
-        SmartDashboard.putNumber("Distancia AprilTag (M)", distanceMeters);
-        SmartDashboard.putNumber("RPM requerida", calculateRPM(z));
-        } else {
-        SmartDashboard.putNumber("Distancia AprilTag (M)", 0);
-        }
     }
 
-
-    
     // Insert Distances
     private static final ShotPoint[] table = {
-        new ShotPoint(1.5, 2000),
-        new ShotPoint(2.0, 1980),
-        new ShotPoint(2.5, 2100),
-        new ShotPoint(3.0, 2200),
-        new ShotPoint(3.5, 2500),
-        new ShotPoint(4.0, 5000)
+        new ShotPoint(1.5, 1900),
+        new ShotPoint(2.0, 1940),
+        new ShotPoint(2.5, 2075),
+        new ShotPoint(3.0, 2185),
+        new ShotPoint(3.5, 2360),
+        new ShotPoint(4.0, 2475)
     };
 
 

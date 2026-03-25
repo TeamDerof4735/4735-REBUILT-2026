@@ -64,7 +64,6 @@ public class SwerveSubsystem extends SubsystemBase
 
   private final Field2d field = new Field2d();
 
-  
   /**
    * AprilTag field layout.
    */
@@ -95,8 +94,8 @@ public class SwerveSubsystem extends SubsystemBase
     try
     {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.MAX_SPEED,
-                                                                  new Pose2d(new Translation2d(Meter.of(10),
-                                                                                               Meter.of(4)),
+                                                                  new Pose2d(new Translation2d(Meter.of(2.5),
+                                                                                               Meter.of(4.05)),
                                                                              Rotation2d.fromDegrees(0)));
       // Alternative method if you don't want to supply the conversion factor via JSON files.
       // swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed, angleConversionFactor, driveConversionFactor);
@@ -111,7 +110,7 @@ public class SwerveSubsystem extends SubsystemBase
                                                0.1); //Correct for skew that gets worse as angular velocity increases. Start with a coefficient of 0.1.
     swerveDrive.setModuleEncoderAutoSynchronize(false,
                                                 1); // Enable if you want to resynchronize your absolute encoders and motor encoders periodically when they are not moving.
-//    swerveDrive.pushOffsetsToEncoders(); // Set the absolute encoder to be used over the internal encoder and push the offsets onto it. Throws warning if not possible
+   //    swerveDrive.pushOffsetsToEncoders(); // Set the absolute encoder to be used over the internal encoder and push the offsets onto it. Throws warning if not possible
     
     setupPathPlanner();
 
@@ -119,8 +118,6 @@ public class SwerveSubsystem extends SubsystemBase
 
     SmartDashboard.putData("Field", field);
   }
-
-  
 
   /**
    * Construct the swerve drive.
@@ -136,11 +133,6 @@ public class SwerveSubsystem extends SubsystemBase
                                   new Pose2d(new Translation2d(Meter.of(2), Meter.of(0)),
                                              Rotation2d.fromDegrees(0)));
   }
-
-  /**
-   * Setup the photon vision class.
-   */
-
 
   public double error() {
 
@@ -159,11 +151,9 @@ public class SwerveSubsystem extends SubsystemBase
     return 0;
   }
 
-
   public double ActAngle () {
     return swerveDrive.getPose().getRotation().getRadians();
   }
-
 
   public double[] objetivo (){
     if(DriverStation.getAlliance().isPresent()){
@@ -177,13 +167,14 @@ public class SwerveSubsystem extends SubsystemBase
     }
   } 
 
+  public Translation2d hubObj() {
+    double[] obj = objetivo();
+    return new Translation2d(obj[0], obj[1]);
+  }
 
   public SwerveDrive getSwerve(){
     return swerveDrive;
   }
-
-
-
 
   public double desiredHeadingDeg() {
     double dx = Targetx - getPose().getX();
@@ -212,8 +203,6 @@ public class SwerveSubsystem extends SubsystemBase
     field.setRobotPose(getPose());
     
   }
-
-
 
   public void filterOutOfFieldData(){
     Pose2d currentPosition = this.getPose();
@@ -319,7 +308,7 @@ public class SwerveSubsystem extends SubsystemBase
 
     //Preload PathPlanner Path finding
     // IF USING CUSTOM PATHFINDER ADD BEFORE THIS LINE
-    PathfindingCommand.warmupCommand().schedule();
+//    PathfindingCommand.warmupCommand().schedule();
   }
 
   /**
@@ -417,7 +406,6 @@ public class SwerveSubsystem extends SubsystemBase
     return Commands.none();
 
   }
-
 
   /**
    * Command to characterize the robot drive motors using SysId

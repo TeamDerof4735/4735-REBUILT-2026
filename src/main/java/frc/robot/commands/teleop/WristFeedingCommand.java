@@ -10,8 +10,8 @@ public class WristFeedingCommand extends Command {
   private final WristSubystem wrist;
   private final PIDController pid;
 
-  private final double posA = 0.27;
-  private final double posB = 0.55;
+  private final double posA = 0.32;
+  private final double posB = 0.29;
 
   private double currentSetpoint;
   private boolean goingToB = true;

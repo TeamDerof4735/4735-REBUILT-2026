@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
@@ -23,6 +26,8 @@ public class Vision extends SubsystemBase
 {
 
   private final SwerveDrive         swerveDrive;
+  
+  ShooterInterpolation shooterInterpolation;
 
   public Pose2d finalPose;
 
@@ -36,21 +41,28 @@ public class Vision extends SubsystemBase
     private final String limelightNames = "limelight-derof";
 
     // Pose estimation
-    private double averageTagDistance = 0.0;
     private PoseEstimate lastAcceptedVision = null;
+
+    private double averageTagDistance = 0.0;
+    private static PoseEstimate mt2;
+    private static PoseEstimate oldMt = new PoseEstimate();
 
     //Logging
     List<Pose3d> allTagPoses = new ArrayList<>();
 
-  public Vision (SwerveSubsystem swerveSubsystem) {
+  public Vision (SwerveSubsystem swerveSubsystem, ShooterInterpolation shooterInterpolation) {
 
     this.swerveSubsystem = swerveSubsystem;
-
+    this.shooterInterpolation = shooterInterpolation;
+    
     swerveDrive = swerveSubsystem.getSwerveDrive();
 
   }
 
   public void periodic () {
+
+    SmartDashboard.putNumber("rpm requeridas", shooterInterpolation.calculateRPM(hubDis()));
+    SmartDashboard.putNumber("distancia", hubDis());
 
     LimelightHelpers.SetRobotOrientation(
             limelightNames, 
@@ -58,14 +70,7 @@ public class Vision extends SubsystemBase
             0, 0, 0, 0, 0
     );
 
-    PoseEstimate mt2Estimate = mt2(isRedAlliance());
-
-    if (mt2Estimate == null || mt2Estimate.tagCount == 0) {
-        averageTagDistance = 0;
-        return;
-    }
-
-    averageTagDistance = mt2Estimate.avgTagDist;
+    averageTagDistance = (mt2 == null) ? 0 : mt2.avgTagDist;
 
     // Calculate standard deviations
         double xyStdDev = VisionConstants.xyStdDevCoefficient 
@@ -79,54 +84,60 @@ public class Vision extends SubsystemBase
 
         // Process odometry and log vision data
         swerveSubsystem.filterOutOfFieldData();
-        odometryWithVision(mt2Estimate);
+        odometryWithVision(limelightNames, xyStdDev,0);
 
         
   }
 
-  public void odometryWithVision(PoseEstimate newMt) {
+  public void odometryWithVision(String limelightName, double xySTD, double thetaSTD) {
+    if (LimelightHelpers.getTV(limelightNames) && LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightNames) != null) {
+        
+        if (mt2 != null) {
+            oldMt = mt2;
+        }
 
-    if (!LimelightHelpers.getTV(limelightNames) || newMt == null || newMt.tagCount == 0) {
-        return;
-    }
+        // Fetch latest bot pose
+        mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightNames) == null ? new PoseEstimate():LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelightNames) ;
+        boolean doRejectUpdate = false;
 
-    Pose2d currentPose = swerveSubsystem.getPose();
+        // Reject updates if robot is spinning too fast
+        if (Math.abs(swerveSubsystem.velAng()) > 720) {
+            doRejectUpdate = true;
+        }
 
-    double error = currentPose.getTranslation()
-      .getDistance(newMt.pose.getTranslation());
-
-    if (error > 1.0) {
-      return;
-    }
-
-    if (Math.abs(swerveSubsystem.velAng()) > 720) {
-      return;
-    }
-
-    if (linearSpeedMps() > 3.0) {
-      return;
-    }
-
-    boolean outOfBounds = 
-              (newMt.pose.getX() < -Constants.fieldBorderMargin)
-          || (newMt.pose.getX() > Constants.fieldLength + Constants.fieldBorderMargin)
-          || (newMt.pose.getY() < -Constants.fieldBorderMargin)
-          || (newMt.pose.getY() > Constants.fieldWidth + Constants.fieldBorderMargin);
+        // Reject updates if pose is out of field bounds
+        boolean outOfBounds = 
+               (mt2.pose.getX() < -Constants.fieldBorderMargin)
+            || (mt2.pose.getX() > Constants.fieldLength + Constants.fieldBorderMargin)
+            || (mt2.pose.getY() < -Constants.fieldBorderMargin)
+            || (mt2.pose.getY() > Constants.fieldWidth + Constants.fieldBorderMargin);
             
-    if (outOfBounds || newMt.tagCount == 0) {
-      return;
-    }
+        if (outOfBounds || mt2.tagCount == 0) {
+            doRejectUpdate = true;
+        }
 
-    if (isBigJump(swerveSubsystem.getPose()) && newMt.tagCount == 1) {
-      return;
-    }
+        // Reject updates if there's a sudden position jump
+        boolean suddenJump = 
+               (Math.abs(oldMt.pose.getX() - mt2.pose.getX()) > 0.2)
+            || (Math.abs(oldMt.pose.getY() - mt2.pose.getY()) > 0.2);
 
-    swerveDrive.addVisionMeasurement(newMt.pose, newMt.timestampSeconds);
-    lastAcceptedVision = newMt;
+        if (suddenJump) {
+            doRejectUpdate = true;
+        }
+
+
+        if (linearSpeedMps() >= 5){
+          doRejectUpdate = true;
+        }
+
+
+        // Apply the update if valid
+        if (!doRejectUpdate) {
+            swerveDrive.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
+        }
+        
+    }
   }
-
-
-
 
   public PoseEstimate mt2(boolean allianceRed) {
     return allianceRed
@@ -142,21 +153,47 @@ public class Vision extends SubsystemBase
     );
   } 
 
-  private boolean isBigJump(Pose2d newMt) {
-    if (newMt == null || lastAcceptedVision == null) {
-        return false;
-    }
-
-    double dx = newMt.getX()- lastAcceptedVision.pose.getX();
-    double dy = newMt.getY() - lastAcceptedVision.pose.getY();
-    double distance = Math.hypot(dx, dy);
-
-    return distance > 1.5; // empieza con 1 metro, luego ajustas
-  }
-
   private boolean isRedAlliance() {
   return DriverStation.getAlliance().isPresent()
       && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
+  }
+
+  private Pose2d tagFace(){
+    if (isRedAlliance()){
+      return Constants.cordenadas.tag_10;
+    } else {
+      return Constants.cordenadas.tag_26;
+    }
+  }
+
+  /*public double getTxDesiredDeg() {
+  Translation2d objhub = swerveSubsystem.hubObj();
+
+  double angleToHub = Math.toDegrees(Math.atan2(
+    objhub.getY() - swerveDrive.getPose().getY(),
+    objhub.getX() - swerveDrive.getPose().getX()
+  ));
+
+  double angleToFace = Math.toDegrees(Math.atan2(
+    tagFace().getY() - swerveDrive.getPose().getY(),
+    tagFace().getX() - swerveDrive.getPose().getX()
+  ));
+
+  double txDesired = angleToHub - angleToFace;
+  return MathUtil.inputModulus(txDesired, -180.0, 180.0);
+  } */
+
+  public double limeTx () {
+    return LimelightHelpers.getTX(limelightNames);
+  }
+
+  public double hubDis () {
+    double[] pose = LimelightHelpers.getTargetPose_CameraSpace("limelight-derof");
+    if (pose != null && pose.length >= 3 && LimelightHelpers.getTV("limelight-derof")) {
+      return pose[2];
+    } else {
+      return 0.5;
+    }
   }
 
 }

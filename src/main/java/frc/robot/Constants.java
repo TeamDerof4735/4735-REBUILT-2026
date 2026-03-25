@@ -1,5 +1,8 @@
 package frc.robot;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import swervelib.math.Matter;
@@ -59,8 +62,13 @@ public static final double POSE_VALIDATION_TIME = 0.3; // segundos
     public static int rightMotorWrist_ID = 15;
     public static int encoder_ID = 0;
 
-    public static double guardado = 0.58;
-    public static double afuera = 0.295;
+    public static double guardado = 0.38;
+    public static double afuera = 0.10;
+
+    public static double poseA = 0.36;
+    public static double poseB = 0.36;
+
+
 
 
     public static double kP = 3.15;
@@ -75,10 +83,10 @@ public static final double POSE_VALIDATION_TIME = 0.3; // segundos
     public static int shooterMotor_ID = 10; 
     public static int indexMotor_ID = 11;
 
-    public static double left_kp = 0.0095;       //0.000095
+    public static double left_kp = 0.747;       //0.95
     public static double left_ki = 0;              //0
-    public static double left_kd = 0.0000001;           //1.45
-    public static double left_F = 0.00023;         //0.00021
+    public static double left_kd = 0.0001675;           //1.45
+    public static double left_kv = 0.1317125;         //0.00021
     
   }
 
@@ -100,6 +108,19 @@ public static final double POSE_VALIDATION_TIME = 0.3; // segundos
 
     public static double xyStdDevCoefficient = 0.2;
     public static double thetaStdDevCoefficient = 0.4;
+
+   
+  }
+
+  public static final class cordenadas {
+
+   public static final AprilTagFieldLayout LAYOUT = AprilTagFields.k2026RebuiltAndymark.loadAprilTagLayoutField();
+
+    //blue 
+    public static final Pose2d tag_26 = LAYOUT.getTagPose(26).get().toPose2d();
+
+    //red 
+    public static final Pose2d tag_10 = LAYOUT.getTagPose(10).get().toPose2d();
 
    
   }

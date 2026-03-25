@@ -25,6 +25,7 @@ public class WristRunPos extends Command {
   public void initialize() {
     wristPID.reset();
     wristPID.setSetpoint(setPoint);
+    wristPID.setTolerance(0.4);
   }
   
   @Override

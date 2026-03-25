@@ -1,11 +1,12 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.NeutralOut; // <--- Importante para el Coast
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -14,109 +15,92 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.LimelightHelpers;
 import frc.robot.Constants.shooterConstant;
 
 public class ShooterSubsystem extends SubsystemBase {
 
-  SparkMax shooterMotor = new SparkMax(shooterConstant.shooterMotor_ID, MotorType.kBrushless);
-  SparkMax indexMotor = new SparkMax(shooterConstant.indexMotor_ID, MotorType.kBrushless);
-  SparkMaxConfig shooterMotorConfig = new SparkMaxConfig();
-  SparkMaxConfig indexMotorConfig = new SparkMaxConfig();
-  SparkClosedLoopController shooterCloose = shooterMotor.getClosedLoopController();
+    private final TalonFX master = new TalonFX(Constants.shooterConstant.shooterMotor_ID);
+    private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  ShooterInterpolation shooterInterpolation;
+    // Requests: Uno para girar con PID y otro para dejarlo suelto (Coast)
+    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
+    private final NeutralOut coastRequest = new NeutralOut(); 
 
-  private RelativeEncoder shooterEncoder;
+    private final SparkMax indexMotor = new SparkMax(shooterConstant.indexMotor_ID, MotorType.kBrushless);
+    private final SparkMaxConfig indexMotorConfig = new SparkMaxConfig();
 
-  
-  public ShooterSubsystem() {
-    shooterEncoder = shooterMotor.getEncoder();
+    private double targetRPM = 0.0;
 
-    shooterMotorConfig
-      .inverted(false)
-      .idleMode(IdleMode.kCoast)
-      .smartCurrentLimit(90)
-      .encoder.velocityConversionFactor(1);
+    public ShooterSubsystem() {
+        // Configuración del PID para el Kraken
+        config.Slot0.kP = Constants.shooterConstant.left_kp;
+        config.Slot0.kI = Constants.shooterConstant.left_ki;
+        config.Slot0.kD = Constants.shooterConstant.left_kd;
+        config.Slot0.kV = Constants.shooterConstant.left_kv;
 
-    shooterMotorConfig.closedLoop
-      .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-      .pid(
-      Constants.shooterConstant.left_kp,
-      Constants.shooterConstant.left_ki,
-      Constants.shooterConstant.left_kd)
-      .outputRange(-1.0, 1.0);
+        // Límites de corriente para no quemar nada
+        config.CurrentLimits.SupplyCurrentLimit = 60;
+        config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    shooterMotorConfig.closedLoop.feedForward
-      .kV(Constants.shooterConstant.left_F);
+        // ESTO ES LO QUE FALTABA: Configurar el modo Neutral y APLICARLO
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        master.getConfigurator().apply(config);
 
-    shooterMotorConfig.encoder
-      .uvwMeasurementPeriod(8);
+        // Configuración del Indexer (SparkMax)
+        indexMotorConfig
+            .inverted(false)
+            .idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(45);
 
-    indexMotorConfig
-      .inverted(false)
-      .idleMode(IdleMode.kBrake)
-      .smartCurrentLimit(45);
-
-    shooterMotor.configure(shooterMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-    indexMotor.configure(indexMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-    
-  }
-
-  @Override
-  public void periodic() {
-    SmartDashboard.putNumber("Shooter RPM", getShooterRPM());
-
-    // Obtener pose del AprilTag en espacio de cámara
-    double[] pose = LimelightHelpers.getTargetPose_CameraSpace("limelight-derof");
-
-    if (pose != null && pose.length >= 3 && LimelightHelpers.getTV("limelight-derof")) {
-      double x = pose[0]; // izquierda/derecha (metros)
-      double y = pose[1]; // arriba/abajo (metros)
-      double z = pose[2]; // frente (metros)
-
-      // Distancia directa 3D
-      double distanceMeters = z;
-
-      SmartDashboard.putNumber("AprilTag X", x);
-      SmartDashboard.putNumber("AprilTag Y", y);
-      SmartDashboard.putNumber("AprilTag Z", z);
-      SmartDashboard.putNumber("Distancia AprilTag (M)", distanceMeters);
-
-    } else {
-      SmartDashboard.putNumber("Distancia AprilTag (M)", 0);
+        indexMotor.configure(indexMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     }
-  }
 
-  public double getShooterRPM () {
-    return shooterEncoder.getVelocity();
-  }
+    @Override
+    public void periodic() {
+        // Aquí ya NO ponemos configuración de NeutralMode para no saturar el CAN
+        SmartDashboard.putNumber("Shooter RPM", getCurrentRPM());
+        SmartDashboard.putNumber("Shooter Target", getTargetRPM());
+    }
 
-  public void shooterSpeed(double speedMotor) {
-    shooterCloose.setSetpoint(speedMotor, ControlType.kVelocity);
-  }
+    public void setShooterRPM(double rpm) {
+        targetRPM = rpm;
+        
+        if (rpm <= 0) {
+            // Si la meta es 0, mandamos "Coast" para que deje de vibrar y gire libre
+            master.setControl(coastRequest);
+        } else {
+            // Si la meta es > 0, activamos el control de velocidad
+            double rps = rpm / 60.0;
+            master.setControl(velocityRequest.withVelocity(rps));
+        }
+    }
 
-  public void indexMove(double power) {
-    indexMotor.set(power);
-  }
+    public double getCurrentRPM() {
+        return master.getVelocity().getValueAsDouble() * 60.0;
+    }
 
-  
-  // Interpolation Not Good
-  public double calculateShoot(double distancia) {
+    public void indexMove(double power) {
+        indexMotor.set(power);
+    }
 
+    public double getTargetRPM() {
+        return targetRPM;
+    }
 
-    double dMin = 1.4;   // distancia mínima esperada (metros)
-    double dMax = 5.3;   // distancia máxima esperada
+    public boolean atSpeed(double toleranceRPM) {
+        return Math.abs(getCurrentRPM() - targetRPM) <= toleranceRPM;
+    }
 
-    double rpmMin = 2000;   // potencia mínima
-    double rpmMax = 5200;   // potencia máxima
+    // Interpolación para el disparo
+    public double calculateShoot(double distancia) {
+        double dMin = 1.4;   
+        double dMax = 5.3;   
+        double rpmMin = 2000;
+        double rpmMax = 5200;
 
-    // Regla de 3 (interpolación lineal)
-    double potencia = rpmMin + 
-        ((distancia  - dMin) / (dMax - dMin)) * (rpmMax - rpmMin);
+        double potencia = rpmMin + 
+            ((distancia - dMin) / (dMax - dMin)) * (rpmMax - rpmMin);
 
-    return potencia;
-  }
-
-  
-} 
+        return potencia;
+    }
+}

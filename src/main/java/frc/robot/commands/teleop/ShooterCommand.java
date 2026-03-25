@@ -2,10 +2,12 @@ package frc.robot.commands.teleop;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.LimelightHelpers;
 import frc.robot.subsystems.ConveyorSubsystem;
 import frc.robot.subsystems.ShooterInterpolation;
 import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.Vision;
 
 public class ShooterCommand extends Command {
 
@@ -13,6 +15,7 @@ public class ShooterCommand extends Command {
   private final ConveyorSubsystem conveyor;
   private final ShooterInterpolation shooterInterpolation;
   private final WristFeedingCommand wristCommand;
+  private final Vision vision;
 
   private double distanceMeters;
   private double targetRPM;
@@ -25,14 +28,16 @@ public class ShooterCommand extends Command {
       ShooterSubsystem shooter,
       ConveyorSubsystem conveyor,
       ShooterInterpolation shooterInterpolation,
-      WristFeedingCommand wristCommand) {
+      WristFeedingCommand wristCommand, 
+      Vision vision) {
 
     this.shooter = shooter;
     this.conveyor = conveyor;
     this.shooterInterpolation = shooterInterpolation;
     this.wristCommand = wristCommand;
+    this.vision = vision;
 
-    addRequirements(shooter, conveyor);
+    addRequirements(shooter, conveyor, vision);
   }
 
   @Override
@@ -45,34 +50,28 @@ public class ShooterCommand extends Command {
   @Override
   public void execute() {
 
-    // Limelight
-    double[] pose = LimelightHelpers.getTargetPose_CameraSpace("limelight-derof");
 
-    if (pose != null && pose.length >= 3 && LimelightHelpers.getTV("limelight-derof")) {
-      distanceMeters = pose[2];
-    } else {
-      distanceMeters = 2.5;
-    }
+    distanceMeters = vision.hubDis();
 
     // RPM
     targetRPM = shooterInterpolation.calculateRPM(distanceMeters);
-    shooter.shooterSpeed(targetRPM);
+    shooter.setShooterRPM(targetRPM);
 
-    if (!wristActivated && shooter.getShooterRPM() >= (targetRPM - 50)) {
+    if (!wristActivated && shooter.getCurrentRPM() >= (targetRPM - 50)) {
       wristActivated = true;
 
-      wristCommand.schedule();
+      //CommandScheduler.getInstance().schedule(wristCommand);
     }
 
-    if (shooter.getShooterRPM() >= (targetRPM - 50)) {
+    if (shooter.getCurrentRPM() >= (targetRPM - 50)) {
 
       if (!timer.isRunning()) {
         timer.restart();
       }
 
-      if (timer.get() >= 0.4) {
-        shooter.indexMove(-0.7);
-        conveyor.conveyorMove(0.7);
+      if (timer.get() >= 0.125) {
+        shooter.indexMove(-0.8);
+        conveyor.conveyorMove(0.9);
       } else {
         shooter.indexMove(0);
         conveyor.conveyorMove(0);
@@ -89,7 +88,7 @@ public class ShooterCommand extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    shooter.shooterSpeed(0);
+    shooter.setShooterRPM(0);
     shooter.indexMove(0);
     conveyor.conveyorMove(0);
 

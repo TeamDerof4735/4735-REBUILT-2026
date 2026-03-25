@@ -19,7 +19,7 @@ public class ConveyorSubsystem extends SubsystemBase {
     conveyorMotorConfig
       .inverted(true)
       .idleMode(IdleMode.kCoast)
-      .smartCurrentLimit(75);
+      .smartCurrentLimit(50);
 
     conveyorMotor.configure(conveyorMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
   }

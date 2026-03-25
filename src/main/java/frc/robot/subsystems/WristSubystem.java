@@ -28,7 +28,7 @@ public class WristSubystem extends SubsystemBase {
     Commands.runOnce(
       () -> {
         wristPID.reset();
-        wristPID.setSetpoint(position);
+       wristPID.setSetpoint(position);
       },
       this
     );
@@ -55,6 +55,8 @@ public class WristSubystem extends SubsystemBase {
 
     wristPID = new PIDController(Constants.wristConstants.kP, Constants.wristConstants.kI, Constants.wristConstants.kD);
 
+    
+
   }
 
   @Override
@@ -73,4 +75,5 @@ public class WristSubystem extends SubsystemBase {
     left_WristMotor.set(power);
     right_WristMotor.set(power);
   }
+
 }

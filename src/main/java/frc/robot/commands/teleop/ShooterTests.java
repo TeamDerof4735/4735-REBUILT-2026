@@ -27,21 +27,21 @@ public class ShooterTests extends Command{
   
   @Override
   public void execute() {
-    shooter.shooterSpeed(1995);
+    shooter.setShooterRPM(2465);
     
-    if(shooter.getShooterRPM() >= 1994){
+    if(shooter.getCurrentRPM() >= 2415){
       Timer.start();
-      if (Timer.get() >= 0.4) {
-        shooter.shooterSpeed(1995);
+      if (Timer.get() >= 0.10) {
+        shooter.setShooterRPM(2465);
         shooter.indexMove(-0.7);
-        conveyor.conveyorMove(0.7);
+        conveyor.conveyorMove(0.95);
       } else {
-        shooter.shooterSpeed(1995);
+        shooter.setShooterRPM(2465);
         shooter.indexMove(0);
         conveyor.conveyorMove(0);
       }
     } else {
-      shooter.shooterSpeed(1995);
+      shooter.setShooterRPM(3000);
       shooter.indexMove(0);
       conveyor.conveyorMove(0);
       Timer.reset();
@@ -51,7 +51,7 @@ public class ShooterTests extends Command{
   
   @Override
   public void end(boolean interrupted) {
-    shooter.shooterSpeed(0);
+    shooter.setShooterRPM(0);
     shooter.indexMove(0);
     conveyor.conveyorMove(0);
   }

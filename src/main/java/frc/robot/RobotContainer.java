@@ -1,6 +1,8 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -13,9 +15,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.drivebase.AutoAim;
 import frc.robot.commands.teleop.IntakeCommand;
 import frc.robot.commands.teleop.WristFeedingCommand;
+import frc.robot.commands.teleop.WristTests;
 import frc.robot.commands.teleop.ShooterCommand;
+import frc.robot.commands.teleop.ShooterTests;
 //import frc.robot.commands.teleop.ShooterTests;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.Vision;
@@ -42,7 +47,7 @@ public class RobotContainer
 
   // Virtual Subsystems
   private final ShooterInterpolation shooterInterpolation = new ShooterInterpolation();
-  private final Vision vision = new Vision(drivebase);
+  private final Vision vision = new Vision(drivebase, shooterInterpolation);
 
   // Commands
   private WristFeedingCommand intakeFeedingCommand = new WristFeedingCommand(wristSubystem);
@@ -152,22 +157,29 @@ public class RobotContainer
       driverController.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
                               driverController.start().whileTrue(Commands.none());
                               driverController.back().whileTrue(Commands.none());
-                              driverController.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
+                              driverController.b().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
     }
 
-
     // ----------------- Control Subsysem -----------------     
-    subsystemController.rightBumper().whileTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
+    driverController.rightBumper().whileTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
       wristSubystem.goToPostionVoltage(Constants.wristConstants.afuera),
       new IntakeCommand(intakeSubsystem)    
     ));
 
-    subsystemController.y().onTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
+    driverController.y().onTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
       wristSubystem.goToPostionVoltage(Constants.wristConstants.guardado)   
     ));
+
+    subsystemController.b().whileTrue(new WristTests(wristSubystem));
+
+    driverController.x().onTrue(new AutoAim(drivebase, 
+    vision, 
+    ()->MathUtil.applyDeadband(-driverController.getLeftY(), 0.05), 
+    ()->MathUtil.applyDeadband(-driverController.getLeftX(), 0.05)));
     
     //subsystemController.a().whileTrue( new ShooterTests(shooterSubsystem, conveyorSubsystem)); //Shooter Testing
-    subsystemController.a().whileTrue( new ShooterCommand(shooterSubsystem, conveyorSubsystem, shooterInterpolation, intakeFeedingCommand)); //Shooter Command
+    driverController.leftBumper().whileTrue( new ShooterCommand(shooterSubsystem, conveyorSubsystem, shooterInterpolation, intakeFeedingCommand, vision)); //Shooter Command
+    
   }
 
 

@@ -14,21 +14,23 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.LimelightHelpers;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.Vision;
 
 public class AutoAim extends Command {
 
   SwerveSubsystem swerveSubsystem;
+  Vision vision;
   private DoubleSupplier translationX;
   private DoubleSupplier translationY;
   private final PIDController rotationController;
   
-  public AutoAim(SwerveSubsystem swerveSubsystem, DoubleSupplier translationX, DoubleSupplier translationY) {
+  public AutoAim(SwerveSubsystem swerveSubsystem, Vision vision, DoubleSupplier translationX, DoubleSupplier translationY) {
 
     this.rotationController = 
       new PIDController(
+        0.145, 
         0, 
-        0, 
-        0);
+        0); //0.8
 
 
     rotationController.setTolerance(0.5);
@@ -36,7 +38,9 @@ public class AutoAim extends Command {
     this.swerveSubsystem = swerveSubsystem;
     this.translationX = translationX;
     this.translationY = translationY;
+    this.vision = vision;
     addRequirements(swerveSubsystem);
+    addRequirements(vision);
 
    
   }
@@ -56,14 +60,7 @@ public void execute() {
     double ySpeed = Math.pow(translationY.getAsDouble(), 5)
         * swerveSubsystem.getSwerve().getMaximumChassisVelocity();
 
-    double rotationOutput = 0.0;
-
-    if (LimelightHelpers.getTV("limelight-derof")) {
-
-        double limelightTx = LimelightHelpers.getTX("limelight-derof");
-        rotationOutput = rotationController.calculate(limelightTx, 0.0);
-        
-    } 
+    double rotationOutput = rotationController.calculate(vision.limeTx(), 0); //set point 0 
 
     swerveSubsystem.drive(
       new Translation2d(xSpeed, ySpeed), 
@@ -80,6 +77,6 @@ public void execute() {
 
   @Override
   public boolean isFinished() {
-    return rotationController.atSetpoint();
+    return false;
   }
 }
