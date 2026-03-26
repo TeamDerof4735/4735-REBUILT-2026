@@ -9,10 +9,12 @@ public class ShooterTests extends Command{
   ShooterSubsystem shooter;
   ConveyorSubsystem conveyor;
   Timer Timer = new Timer();
+  double rpm;
 
-  public ShooterTests(ShooterSubsystem shooter, ConveyorSubsystem conveyor) {
+  public ShooterTests(ShooterSubsystem shooter, ConveyorSubsystem conveyor, double rpm) {
     this.shooter = shooter;
     this.conveyor = conveyor;
+    this.rpm = rpm;
 
     addRequirements(shooter);
     addRequirements(conveyor);
@@ -27,21 +29,21 @@ public class ShooterTests extends Command{
   
   @Override
   public void execute() {
-    shooter.setShooterRPM(2465);
+    shooter.setShooterRPM(rpm);
     
-    if(shooter.getCurrentRPM() >= 2415){
+    if(shooter.getCurrentRPM() >= (rpm-40)){
       Timer.start();
-      if (Timer.get() >= 0.10) {
-        shooter.setShooterRPM(2465);
+      if (Timer.get() >= 0.4) {
+        shooter.setShooterRPM(rpm);
         shooter.indexMove(-0.7);
         conveyor.conveyorMove(0.95);
       } else {
-        shooter.setShooterRPM(2465);
+        shooter.setShooterRPM(rpm);
         shooter.indexMove(0);
         conveyor.conveyorMove(0);
       }
     } else {
-      shooter.setShooterRPM(3000);
+      shooter.setShooterRPM(rpm);
       shooter.indexMove(0);
       conveyor.conveyorMove(0);
       Timer.reset();

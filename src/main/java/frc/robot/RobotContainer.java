@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.auto.auto1;
+import frc.robot.commands.auto.auto2;
 import frc.robot.commands.drivebase.AutoAim;
 import frc.robot.commands.teleop.IntakeCommand;
 import frc.robot.commands.teleop.WristFeedingCommand;
@@ -114,9 +116,26 @@ public class RobotContainer
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
+    NamedCommands.registerCommand(
+    "intake on",
+    Commands.parallel(
+        wristSubystem.goToPostionVoltage(Constants.wristConstants.afuera),
+        Commands.runOnce(() -> new IntakeCommand(intakeSubsystem, 85))
+    ));
+
+    NamedCommands.registerCommand(
+    "intake off",
+    Commands.parallel(
+        wristSubystem.goToPostionVoltage(Constants.wristConstants.guardado),
+        Commands.runOnce(() -> new IntakeCommand(intakeSubsystem, 0))
+    ));
+
+
     // Auto Selection
     SmartDashboard.putData("Select Auto", auto);
     auto.addOption("nada", null);
+    auto.addOption("auto 1", new auto1(shooterSubsystem, conveyorSubsystem));
+    auto.addOption("auto 2", new auto2(shooterSubsystem, conveyorSubsystem));
   }
 
 
@@ -163,7 +182,7 @@ public class RobotContainer
     // ----------------- Control Subsysem -----------------     
     driverController.rightBumper().whileTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
       wristSubystem.goToPostionVoltage(Constants.wristConstants.afuera),
-      new IntakeCommand(intakeSubsystem)    
+      new IntakeCommand(intakeSubsystem, 85)    
     ));
 
     driverController.y().onTrue(new SequentialCommandGroup( //INTAKE ABAJO L1
